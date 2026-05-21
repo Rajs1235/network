@@ -6,5 +6,3 @@ pymongo
 matplotlib
 Certifi
 seaborn
-
--e .

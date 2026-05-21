@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: Network_Security
+Version: 0.0.1
+Author: Raj
+Author-email: raj22f069@gmail.com
+Requires-Dist: python-dotenv
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: scikit-learn
+Requires-Dist: pymongo
+Requires-Dist: matplotlib
+Requires-Dist: Certifi
+Requires-Dist: seaborn
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist
