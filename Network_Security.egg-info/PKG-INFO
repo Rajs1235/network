@@ -8,6 +8,7 @@ Requires-Dist: pandas
 Requires-Dist: numpy
 Requires-Dist: scikit-learn
 Requires-Dist: pymongo
+Requires-Dist: pymongo[srv]==3.12
 Requires-Dist: matplotlib
 Requires-Dist: Certifi
 Requires-Dist: seaborn
