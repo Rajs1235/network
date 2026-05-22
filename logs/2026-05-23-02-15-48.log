@@ -1,0 +1,5 @@
+2026-05-23 02:15:52,551 - INFO - initiate data injestion
+2026-05-23 02:16:08,255 - INFO - performed train test split
+2026-05-23 02:16:08,255 - INFO - Exited  train test split
+2026-05-23 02:16:08,256 - INFO - exporting train and test file paths
+2026-05-23 02:16:08,841 - INFO - Exported train and test file path
