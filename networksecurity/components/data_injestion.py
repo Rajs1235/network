@@ -47,13 +47,7 @@ class DataIngestion:
         except Exception as e:
             raise NetworkSecurityException(e,sys)
         
-    def initiate_data_injestion(self):
-        try:
-            dataframe=self.export_collection_as_dataframe()
-            dataframe=self.export_data_to_feature_store(dataframe)
 
-        except Exception as e:
-            raise NetworkSecurityException(e,sys)
     
     def split_data_into_train_test(self,dataframe:pd.DataFrame):
         try:
