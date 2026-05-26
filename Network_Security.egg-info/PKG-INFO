@@ -14,6 +14,7 @@ Requires-Dist: Certifi
 Requires-Dist: seaborn
 Requires-Dist: dill
 Requires-Dist: pyyaml
+Requires-Dist: mlflow
 Dynamic: author
 Dynamic: author-email
 Dynamic: requires-dist

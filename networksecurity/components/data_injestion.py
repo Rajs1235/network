@@ -8,6 +8,7 @@ import pymongo
 import pandas as pd
 import numpy as np
 import seaborn as sns
+import certifi
 from typing import List
 from sklearn.model_selection import train_test_split
 from dotenv import load_dotenv
@@ -25,7 +26,15 @@ class DataIngestion:
         try:
             database_name=self.data_ingestion_config.database_name
             collection_name=self.data_ingestion_config.collection_name
-            self.mongo_client=pymongo.MongoClient(MONGO_DB_URL)
+            if not MONGO_DB_URL:
+                raise ValueError("MONGO_DB_URL is not set in environment variables")
+            self.mongo_client=pymongo.MongoClient(
+                MONGO_DB_URL,
+                tls=True,
+                tlsCAFile=certifi.where(),
+                serverSelectionTimeoutMS=30000,
+            )
+            self.mongo_client.admin.command("ping")
             collection=self.mongo_client[database_name][collection_name]
             df=pd.DataFrame(list(collection.find()))
             if "_id" in df.columns.to_list():

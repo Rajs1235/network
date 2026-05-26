@@ -13,6 +13,9 @@ TEST_FILE_NAME = "test.csv"
 
 SCHEMA_FILE_PATH = os.path.join("data_scheme", "schema.yaml")
 
+SAVED_MODEL_DIR = os.path.join("saved_models")
+MODEL_FILE_NAME = "model.pkl"
+
 DATA_INGESTION_COLLECTION_NAME = "NetworkData"
 DATA_INGESTION_DATABASE_DIR_NAME = "NetworkData"
 DATA_INGESTION_DATABASE_COLLECTION_NAME = "NetworkSecurity"
@@ -36,3 +39,13 @@ DATA_TRANSFORMATION_IMPUTER_PARAMS:dict={
     "n_neighbors":3,
     "weights":"uniform",
 }
+
+MODEL_TRAINER_DIR_NAME:str="model_trainer"
+MODEL_TRAINER_TRAINED_MODEL_DIR:str="trained_model"
+MODEL_TRAINER_TRAINED_MODEL_FILE_NAME:str="model.pkl"
+MODEL_TRAINER_EXPECTED_SCORE:float=0.6
+MODEL_TRAINER_OVER_FIITING_UNDER_FITTING_THRESHOLD:float=0.05
+
+CLASSIFICATION_METRICS_DIR_NAME :str="classification_metrics"
+TRAIN_METRIC_FILE_NAME:str="train_metrics.json"
+TEST_METRIC_FILE_NAME:str="test_metrics.json"

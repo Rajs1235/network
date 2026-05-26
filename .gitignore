@@ -2,3 +2,4 @@ venv
 .env
 artifact/
 logs/
+mlruns/

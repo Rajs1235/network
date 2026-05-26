@@ -9,4 +9,5 @@ Certifi
 seaborn
 dill
 pyyaml
+mlflow
 -e .
