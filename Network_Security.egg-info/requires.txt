@@ -10,3 +10,7 @@ seaborn
 dill
 pyyaml
 mlflow
+dagshub
+fastapi
+uvicorn
+python-multipart
