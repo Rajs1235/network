@@ -85,4 +85,8 @@ jobs:
               --ipc="host" \
               --name networksecurity \
               "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
+        - name: Debug image
+          run: |
+            IMAGE="${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
+            echo "$IMAGE"
 
