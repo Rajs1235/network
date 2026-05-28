@@ -1,0 +1,23 @@
+name: workflow
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+
+
+jobs:
+    integration:
+        name: Integration
+        runs-on: ubuntu-latest
+        steps:
+            - name: Continous Integration
+              uses: actions/checkout@v2
+            
+            - name: Lint code
+              run: echo "Linting code..."
+            
+            - name: Run unit tests
+              run: echo "Running unit tests..."
+              
