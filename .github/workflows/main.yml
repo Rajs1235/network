@@ -64,20 +64,25 @@ jobs:
             aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             aws-region: ${{ secrets.AWS_REGION }}
-        
+
         - name: Login to Amazon ECR
           id: login-ecr
           uses: aws-actions/amazon-ecr-login@v1
-        
+
         - name: Pull image from Amazon ECR
-          id: pull-image
           run: |
-           docker pull "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
-        - name: Run container locally
+            docker pull "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
+
+        - name: Stop and remove old container
           run: |
-           docker run -d -p 80:80 --ipc="host" --name=networksecurity -e "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
-        - name: Run Docker Image to server users
+            docker stop networksecurity || true
+            docker rm networksecurity || true
+
+        - name: Run Docker container
           run: |
-           docker run -d -p 80:80 --ipc="host" --name=networksecurity -e "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
-        - name: Deploy to Amazon ECS
-          run: echo "Deploying to Amazon ECS..."
+            docker run -d \
+              -p 80:80 \
+              --ipc="host" \
+              --name networksecurity \
+              "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
+
