@@ -69,11 +69,7 @@ jobs:
           id: login-ecr
           uses: aws-actions/amazon-ecr-login@v1
 
-        - name: Login to Amazon ECR manually
-          run: |
-           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
-           docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REPOSITORY_URL }}
-
+        
 
 
         - name: Pull image from Amazon ECR
