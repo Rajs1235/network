@@ -1,95 +1,94 @@
 name: workflow
 
 on:
-    push:
-        branches: [ main ]
-    pull_request:
-        branches: [ main ]
-
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-    integration:
-        name: Integration
-        runs-on: ubuntu-latest
-        steps:
-            - name: Continous Integration
-              uses: actions/checkout@v2
-            
-            - name: Lint code
-              run: echo "Linting code..."
-            
-            - name: Run unit tests
-              run: echo "Running unit tests..."
-              
-    build-and-push-ecr-image:
-      name: Continuous Delievery
-      needs: integration
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+  integration:
+    name: Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ${{ secrets.AWS_REGION }}
-        
-        - name: Login to Amazon ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v1
-        
-        - name: Build, tag, and push  image to Amazon ECR
-          id: build-image
-          env:
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
-            IMAGE_TAG: latest
-          run: |
-           docker buildx build --push -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" .
-           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - name: Lint code
+        run: echo "Linting code..."
 
-    continous-deployment:
-      name: Continuous Deployment
-      needs: build-and-push-ecr-image
-      runs-on: self-hosted
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+      - name: Run unit tests
+        run: echo "Running unit tests..."
 
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ${{ secrets.AWS_REGION }}
+  build-and-push-ecr-image:
+    name: Continuous Delivery
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-        - name: Login to Amazon ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-        
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: latest
+        run: |
+          docker buildx build --push -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" .
+          echo "image=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
 
-        - name: Pull image from Amazon ECR
-          run: |
-            docker pull "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
+  continuous-deployment:
+    name: Continuous Deployment
+    needs: build-and-push-ecr-image
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-        - name: Stop and remove old container
-          run: |
-            docker stop networksecurity || true
-            docker rm networksecurity || true
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-        - name: Run Docker container
-          run: |
-            docker run -d \
-              -p 80:80 \
-              --ipc="host" \
-              --name networksecurity \
-              "${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
-        - name: Debug image
-          run: |
-            IMAGE="${{ secrets.AWS_ECR_REPOSITORY_URL }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
-            echo "$IMAGE"
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Pull image from Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+        run: |
+          docker pull "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+
+      - name: Stop and remove old container
+        run: |
+          docker stop networksecurity || true
+          docker rm networksecurity || true
+
+      - name: Run Docker container
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+        run: |
+          docker run -d \
+            -p 80:80 \
+            --ipc="host" \
+            --name networksecurity \
+            "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+
 
