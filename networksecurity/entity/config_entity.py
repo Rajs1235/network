@@ -1,7 +1,8 @@
 from datetime import datetime
 import os
 import networksecurity.constants.training_pipeline as training_pipeline
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class TrainingPipelineConfig:
     def __init__(self,timestamp=datetime.now()):
@@ -9,7 +10,10 @@ class TrainingPipelineConfig:
         self.artifact_name = training_pipeline.ARTIFACT_DIR
         self.pipeline_name = training_pipeline.PIPELINE_NAME
         self.artifact_dir = os.path.join(os.getcwd(), training_pipeline.ARTIFACT_DIR, self.pipeline_name, datetime.now().strftime("%Y%m%d%H%M%S"))
+        self.model_dir=os.path.join("final_model")
         self.timestamp = timestamp
+        self.TRAINING_BUCKET_NAME = os.getenv("TRAINING_BUCKET_NAME")
+        self.SAVED_MODEL_DIR = "final_model"
 
 class DataIngestionConfig:
     def __init__(self,training_pipeline_config: TrainingPipelineConfig):

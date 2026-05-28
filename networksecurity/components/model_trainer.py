@@ -14,9 +14,14 @@ from networksecurity.utils.ml_utils.metric.classification_metric import get_clas
 from sklearn.metrics import classification_report,confusion_matrix,accuracy_score,precision_score,recall_score,f1_score,r2_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import (RandomForestClassifier,GradientBoostingClassifier,AdaBoostClassifier)
+import json, os
 
-import dagshub
-if os.getenv("USE_DAGSHUB", "true").lower() == "true":
+try:
+    import dagshub
+except ImportError:
+    dagshub = None
+
+if os.getenv("USE_DAGSHUB", "false").lower() == "true" and dagshub is not None:
     try:
         dagshub.init(repo_owner='Rajs1235', repo_name='network', mlflow=True)
     except Exception as e:
@@ -33,6 +38,13 @@ class ModelTrainer:
 
         except Exception as e:
             raise NetworkSecurityException(e,sys)
+
+    @staticmethod
+    def write_status(path, status, msg=None):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            json.dump({"status": status, "message": msg}, f)
+
     def track_mlflow(self,best_model,classification_metric):
         with mlflow.start_run():
             f1_score=classification_metric.f1_score
@@ -116,14 +128,22 @@ class ModelTrainer:
         return model_trainer_artifact
 
     def initiate_model_trainer(self)->ModelTrainerArtifact:
+        status_file_path = "artifact/network_security/last_training/training_status.json"
+        self.write_status(status_file_path, "started")
         try:
+            self.write_status(status_file_path, "in_progress")
             train_file_path=self.data_transformation_artifact.transformed_train_file_path
             test_file_path=self.data_transformation_artifact.transformed_test_file_path
             train_arr=load_numpy_array_data(train_file_path)
             test_arr=load_numpy_array_data(test_file_path)
             X_train,y_train=train_arr[:,:-1],train_arr[:,-1]
             X_test,y_test=test_arr[:,:-1],test_arr[:,-1]
-            return self.train_model(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test)
+            model_trainer_artifact = self.train_model(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test)
+            self.write_status(status_file_path, "completed")
+            return model_trainer_artifact
 
         except Exception as e:
+            self.write_status(status_file_path, "failed", str(e))
             raise NetworkSecurityException(e,sys)
+
+

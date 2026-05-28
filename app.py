@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import certifi
 from io import BytesIO
 
@@ -9,7 +10,6 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 load_dotenv()
 mongo_db_url=os.getenv("MONGO_DB_URL")
-import pymongo
 from networksecurity.logging.logger import logging
 from networksecurity.exception.exception import NetworkSecurityException
 from networksecurity.pipeline.training_pipeline import TrainPipeline
@@ -22,9 +22,7 @@ from starlette.responses import JSONResponse
 import pandas as pd
 
 from networksecurity.utils.main_utils.utils import load_obj
-client=pymongo.MongoClient(mongo_db_url,tlsCAFile=ce)
 from networksecurity.constants.training_pipeline import DATA_INGESTION_DATABASE_DIR_NAME, TARGET_COLUMN
-database=client[DATA_INGESTION_DATABASE_DIR_NAME]
 
 app=FastAPI()
 origins = ["*"] 
@@ -49,6 +47,14 @@ def run_training_pipeline():
     train_pipeline.initiate_training_pipeline()
 
 
+def read_status_file(file_path: str):
+    if not os.path.exists(file_path):
+        return {"status": "unknown", "message": "status file not found"}
+
+    with open(file_path, "r") as file_obj:
+        return json.load(file_obj)
+
+
 @app.get("/train")
 async def train_route(background_tasks: BackgroundTasks):
     try:
@@ -57,6 +63,19 @@ async def train_route(background_tasks: BackgroundTasks):
     
     except Exception as e:
         raise NetworkSecurityException(e,sys)
+
+
+@app.get("/status")
+async def status_route():
+    try:
+        training_status = read_status_file("artifact/network_security/last_training/training_status.json")
+        sync_status = read_status_file("artifact/network_security/last_training/sync_status.json")
+        return {
+            "training": training_status,
+            "sync": sync_status,
+        }
+    except Exception as e:
+        raise NetworkSecurityException(e, sys)
     
 @app.post("/predict")
 async def predict_route(request:Request,file:UploadFile=File(...)):

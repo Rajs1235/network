@@ -18,6 +18,7 @@ Requires-Dist: mlflow
 Requires-Dist: dagshub
 Requires-Dist: fastapi
 Requires-Dist: uvicorn
+Requires-Dist: awscli
 Requires-Dist: python-multipart
 Dynamic: author
 Dynamic: author-email

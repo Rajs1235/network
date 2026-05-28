@@ -49,3 +49,5 @@ MODEL_TRAINER_OVER_FIITING_UNDER_FITTING_THRESHOLD:float=0.05
 CLASSIFICATION_METRICS_DIR_NAME :str="classification_metrics"
 TRAIN_METRIC_FILE_NAME:str="train_metrics.json"
 TEST_METRIC_FILE_NAME:str="test_metrics.json"
+
+TRAINING_BUCKET_NAME:str="appointybucket"

@@ -1,5 +1,6 @@
 import os
 import sys
+from networksecurity.cloud.s3_syncer import S3Syncer
 from networksecurity.exception.exception import NetworkSecurityException
 from networksecurity.logging.logger import logging
 from networksecurity.components.data_transformation import DataTransformation,DataTransformationConfig
@@ -23,6 +24,7 @@ from networksecurity.entity.artifact_entity import(
 class TrainPipeline:
     def __init__(self):
         self.training_pipeline_config=TrainingPipelineConfig()
+        self.s3_sync=S3Syncer()
     
     def start_data_injestion(self)->DataIngestionArtifact:
         try:
@@ -67,13 +69,27 @@ class TrainPipeline:
             return model_trainer_artifact
         except Exception as e:
             raise NetworkSecurityException(e,sys)
+    def sync_artifact_to_cloud(self):
+        try:
+            aws_bucket_url=f"s3://{self.training_pipeline_config.TRAINING_BUCKET_NAME}/artifact/{self.training_pipeline_config.timestamp}"
+            self.s3_sync.sync_folder_to_s3(local_folder=self.training_pipeline_config.artifact_dir, bucket_url=aws_bucket_url)
+        except Exception as e:
+            raise NetworkSecurityException(e,sys)
         
+    def sync_saved_model_to_cloud(self):
+        try:
+            aws_bucket_url=f"s3://{self.training_pipeline_config.TRAINING_BUCKET_NAME}/saved_models/{self.training_pipeline_config.timestamp}"
+            self.s3_sync.sync_folder_to_s3(local_folder=self.training_pipeline_config.SAVED_MODEL_DIR, bucket_url=aws_bucket_url)
+        except Exception as e:
+            raise NetworkSecurityException(e,sys)
     def initiate_training_pipeline(self):
         try:
             data_injestion_artifact=self.start_data_injestion()
             data_validation_artifact=self.start_data_validation(data_ingestion_artifact=data_injestion_artifact)
             data_transformation_artifact=self.start_data_transformation(data_validation_artifact=data_validation_artifact)
             model_trainer_artifact=self.start_model_trainer(data_transformation_artifact=data_transformation_artifact)
+            self.sync_artifact_to_cloud()
+            self.sync_saved_model_to_cloud()
             return model_trainer_artifact
         except Exception as e:
             raise NetworkSecurityException(e,sys)
